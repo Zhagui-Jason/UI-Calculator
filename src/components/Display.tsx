@@ -24,12 +24,12 @@ const styles = StyleSheet.create({
   },
   mainText: { 
     color: '#FFFFFF', 
-    fontSize: 32, // 🌟 Reducido de 60 a 32 para que "99.99" quepa perfectamente
+    fontSize: 32, 
     lineHeight: 40,
   },
   subText: { 
-    color: '#D8EEFF', // 🌟 Un azul muy claro (estilo nube) que combina con el cielo
-    fontSize: 14, // 🌟 Ajustado para píxeles
+    color: '#D8EEFF', 
+    fontSize: 14, 
     marginBottom: 8,
   },
 });
