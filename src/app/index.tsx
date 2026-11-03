@@ -1,8 +1,12 @@
 import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
-import CalculadoraButton from '../components/CalculadoraButton';
+import CustomText from '../components/CustomText';
 import Display from '../components/Display';
+import Regilla from '../components/Regilla';
+import useCalculator from '../hooks/useCalculator';
 
 export default function Index() {
+  const { display, expression, history, handlePress } = useCalculator();
+
   return (
     <SafeAreaView style={styles.container}>
       {/* CIELO DE MARIO (Display) */}
@@ -12,88 +16,58 @@ export default function Index() {
           <Text style={styles.cloudPixel}>☁️</Text>
           <Text style={styles.cloudPixel}>☁️</Text>
         </View>
-        
-        {/* Usamos el componente Display para los resultados */}
-        <Display value="99.99" subValue="10 + 89.99" />
+
+        {/* Historial de las últimas operaciones */}
+        <View style={styles.historyBox}>
+          {history.map((item, i) => (
+            <CustomText key={i} style={styles.historyText} numberOfLines={1} adjustsFontSizeToFit>
+              {item}
+            </CustomText>
+          ))}
+        </View>
+
+        <Display value={display} subValue={expression} />
       </View>
 
       {/* BLOQUES DE MARIO (Teclado) */}
-      <View style={styles.keyboardContainer}>
-        {/* Fila 1 */}
-        <View style={styles.row}>
-          <CalculadoraButton label="AC" type="action" />
-          <CalculadoraButton label="±" type="action" />
-          <CalculadoraButton label="%" type="action" />
-          <CalculadoraButton label="÷" type="operator" />
-        </View>
-
-        {/* Fila 2 */}
-        <View style={styles.row}>
-          <CalculadoraButton label="7" />
-          <CalculadoraButton label="8" />
-          <CalculadoraButton label="9" />
-          <CalculadoraButton label="×" type="operator" />
-        </View>
-
-        {/* Fila 3 */}
-        <View style={styles.row}>
-          <CalculadoraButton label="4" />
-          <CalculadoraButton label="5" />
-          <CalculadoraButton label="6" />
-          <CalculadoraButton label="-" type="operator" />
-        </View>
-
-        {/* Fila 4 */}
-        <View style={styles.row}>
-          <CalculadoraButton label="1" />
-          <CalculadoraButton label="2" />
-          <CalculadoraButton label="3" />
-          <CalculadoraButton label="+" type="operator" />
-        </View>
-
-        {/* Fila 5 */}
-        <View style={styles.row}>
-          <CalculadoraButton label="." />
-          <CalculadoraButton label="0" />
-          <CalculadoraButton label="=" type="operator" doubleWidth />
-        </View>
-      </View>
+      <Regilla onPress={handlePress} />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
+  container: {
+    flex: 1,
     backgroundColor: '#000000',
   },
-  displayContainer: { 
-    flex: 1, 
-    backgroundColor: '#5C94FC', 
-    justifyContent: 'flex-end', 
+  displayContainer: {
+    flex: 1,
+    backgroundColor: '#5C94FC',
+    justifyContent: 'flex-end',
     padding: 20,
     position: 'relative',
   },
-  cloudsRow: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-around', 
-    position: 'absolute', 
-    top: 40, 
-    left: 0, 
+  cloudsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    position: 'absolute',
+    top: 40,
+    left: 0,
     right: 0,
   },
-  cloudPixel: { 
-    fontSize: 30, 
+  cloudPixel: {
+    fontSize: 30,
     opacity: 0.7,
   },
-  keyboardContainer: { 
-    padding: 4, 
-    backgroundColor: '#000000',
-    paddingBottom: 34, // 🌟 Protege el botón 0 e Igual de las barras del sistema
+  historyBox: {
+    paddingHorizontal: 10,
+    marginBottom: 10,
   },
-  row: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    marginBottom: 4,
+  historyText: {
+    color: '#D8EEFF',
+    fontSize: 10,
+    textAlign: 'right',
+    opacity: 0.7,
+    marginBottom: 6,
   },
 });
