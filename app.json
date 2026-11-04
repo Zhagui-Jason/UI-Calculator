@@ -1,12 +1,13 @@
 {
   "expo": {
-    "name": "UI-Calculator",
+    "name": "Calculadora",
     "slug": "UI-Calculator",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "uicalculator",
     "userInterfaceStyle": "automatic",
+    "package": "com.jason.calculadora",
     "ios": {
       "icon": "./assets/expo.icon"
     },
