@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect, useState } from 'react';
 
-const MAX_DIGITS = 9;
-const MAX_HISTORY = 3;
+const MAX_DIGITS = 12;
+const MAX_HISTORY = 50;
+const HISTORY_KEY = 'calculator_history';
 
 // Evalúa una lista como ['2', '+', '3', '×', '4'] respetando el orden de operaciones
 const evaluate = (tokens: string[]): number => {
@@ -34,19 +36,36 @@ const evaluate = (tokens: string[]): number => {
 // Da formato al resultado: redondea, evita decimales raros y usa notación científica si es muy grande/pequeño
 const format = (n: number): string => {
   if (!Number.isFinite(n)) return 'Error';
-  const rounded = parseFloat(n.toPrecision(9));
+  const rounded = parseFloat(n.toPrecision(12));
   const abs = Math.abs(rounded);
-  if (abs >= 1e9 || (abs !== 0 && abs < 1e-6)) return rounded.toExponential(3);
+  if (abs >= 1e12 || (abs !== 0 && abs < 1e-6)) return rounded.toExponential(3);
   return String(rounded);
 };
 
 export default function useCalculator() {
-  const [tokens, setTokens] = useState<string[]>([]);      // operación en curso: ['2', '+', '3', '×']
-  const [current, setCurrent] = useState('0');             // número que se está escribiendo ('' = esperando uno nuevo)
+  const [tokens, setTokens] = useState<string[]>([]);        // operación en curso: ['2', '+', '3', '×']
+  const [current, setCurrent] = useState('0');               // número que se está escribiendo ('' = esperando uno nuevo)
   const [justEvaluated, setJustEvaluated] = useState(false); // true justo después de presionar "="
   const [history, setHistory] = useState<string[]>([]);
 
   const hasError = current === 'Error';
+
+  // Al abrir la app, carga el historial guardado
+  useEffect(() => {
+    AsyncStorage.getItem(HISTORY_KEY)
+      .then((saved) => {
+        if (saved) setHistory(JSON.parse(saved));
+      })
+      .catch(() => {});
+  }, []);
+
+  // Actualiza el historial en pantalla y lo guarda en el celular
+  const saveHistory = (list: string[]) => {
+    setHistory(list);
+    AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(list)).catch(() => {});
+  };
+
+  const clearHistory = () => saveHistory([]);
 
   const clear = () => {
     setTokens([]);
@@ -123,7 +142,7 @@ export default function useCalculator() {
     setJustEvaluated(true);
 
     if (result !== 'Error') {
-      setHistory([`${full.join(' ')} = ${result}`, ...history].slice(0, MAX_HISTORY));
+      saveHistory([`${full.join(' ')} = ${result}`, ...history].slice(0, MAX_HISTORY));
     }
   };
 
@@ -174,5 +193,5 @@ export default function useCalculator() {
   const display = current !== '' ? current : tokens[tokens.length - 2];
   const expression = tokens.join(' ') + (justEvaluated ? ' =' : '');
 
-  return { display, expression, history, handlePress };
+  return { display, expression, history, handlePress, clearHistory };
 }
