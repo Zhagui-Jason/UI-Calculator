@@ -13,7 +13,6 @@ const OPERATOR_MAP: Record<string, string> = {
   '/': '÷',
 };
 
-// Evalúa una lista respetando el orden de operaciones usando el mapa
 const evaluate = (tokens: string[]): number => {
   if (tokens.length === 0) return 0;
   
@@ -22,7 +21,7 @@ const evaluate = (tokens: string[]): number => {
 
   for (let i = 1; i < tokens.length; i += 2) {
     const rawOp = tokens[i];
-    const op = OPERATOR_MAP[rawOp] || rawOp; // Traduce usando el mapa
+    const op = OPERATOR_MAP[rawOp] || rawOp; 
     const n = parseFloat(tokens[i + 1]);
 
     if (op === '×') {

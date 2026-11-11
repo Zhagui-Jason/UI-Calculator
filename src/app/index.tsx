@@ -12,7 +12,7 @@ export default function Index() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* CIELO DE MARIO (Display) */}
+
       <View style={styles.displayContainer}>
         <View style={styles.cloudsRow}>
           <Text style={styles.cloudPixel}>☁️</Text>
@@ -20,7 +20,6 @@ export default function Index() {
           <Text style={styles.cloudPixel}>☁️</Text>
         </View>
 
-        {/* Botón para abrir el historial */}
         <Pressable style={styles.histButton} onPress={() => setShowHistory(true)}>
           <CustomText style={styles.histButtonText}>HIST</CustomText>
         </Pressable>
@@ -28,10 +27,8 @@ export default function Index() {
         <Display value={display} subValue={expression} />
       </View>
 
-      {/* BLOQUES DE MARIO (Teclado) */}
       <Regilla onPress={handlePress} />
 
-      {/* VENTANA DEL HISTORIAL */}
       <Modal
         visible={showHistory}
         animationType="slide"

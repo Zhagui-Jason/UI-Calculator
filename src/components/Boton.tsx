@@ -22,9 +22,9 @@ export default function Boton({ label, type = 'number', doubleWidth = false, onP
       onPressIn={vibrar}
       style={({ pressed }) => [
         styles.button,
-        label === '.' ? {backgroundColor: '#085eff' } : null ,
+        label === '7' ? {backgroundColor: '#E3691A' } : null ,
         doubleWidth && styles.doubleButton,
-        pressed && (label === '.' ? styles.dotPressed: styles.buttonPressed),
+        pressed && (label === '7' ? styles.dotPressed: styles.buttonPressed),
   ]}
 >
       {({ pressed }) => (
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   dotPressed: {
-    backgroundColor: '#085eff',
+    backgroundColor: '#E3691A',
     borderBottomWidth: 3,
     marginTop: 5,    
   },
