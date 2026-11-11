@@ -5,19 +5,30 @@ const MAX_DIGITS = 12;
 const MAX_HISTORY = 50;
 const HISTORY_KEY = 'calculator_history';
 
-// Evalúa una lista como ['2', '+', '3', '×', '4'] respetando el orden de operaciones
+const OPERATOR_MAP: Record<string, string> = {
+  '+': '+',
+  '-': '-', 
+  '×': '×', 
+  '÷': '÷',
+  '/': '÷',
+};
+
+// Evalúa una lista respetando el orden de operaciones usando el mapa
 const evaluate = (tokens: string[]): number => {
+  if (tokens.length === 0) return 0;
+  
   const nums: number[] = [parseFloat(tokens[0])];
   const ops: string[] = [];
 
-  // Paso 1: resolver × y ÷ primero, guardar + y - para después
   for (let i = 1; i < tokens.length; i += 2) {
-    const op = tokens[i];
+    const rawOp = tokens[i];
+    const op = OPERATOR_MAP[rawOp] || rawOp; // Traduce usando el mapa
     const n = parseFloat(tokens[i + 1]);
+
     if (op === '×') {
       nums[nums.length - 1] *= n;
     } else if (op === '÷') {
-      if (n === 0) return NaN; // división entre 0
+      if (n === 0) return NaN;
       nums[nums.length - 1] /= n;
     } else {
       ops.push(op);
@@ -25,7 +36,6 @@ const evaluate = (tokens: string[]): number => {
     }
   }
 
-  // Paso 2: resolver + y - de izquierda a derecha
   let result = nums[0];
   ops.forEach((op, i) => {
     result = op === '+' ? result + nums[i + 1] : result - nums[i + 1];
@@ -33,7 +43,6 @@ const evaluate = (tokens: string[]): number => {
   return result;
 };
 
-// Da formato al resultado: redondea, evita decimales raros y usa notación científica si es muy grande/pequeño
 const format = (n: number): string => {
   if (!Number.isFinite(n)) return 'Error';
   const rounded = parseFloat(n.toPrecision(12));
@@ -43,14 +52,13 @@ const format = (n: number): string => {
 };
 
 export default function useCalculator() {
-  const [tokens, setTokens] = useState<string[]>([]);        // operación en curso: ['2', '+', '3', '×']
-  const [current, setCurrent] = useState('0');               // número que se está escribiendo ('' = esperando uno nuevo)
-  const [justEvaluated, setJustEvaluated] = useState(false); // true justo después de presionar "="
+  const [tokens, setTokens] = useState<string[]>([]);
+  const [current, setCurrent] = useState('0');
+  const [justEvaluated, setJustEvaluated] = useState(false);
   const [history, setHistory] = useState<string[]>([]);
 
   const hasError = current === 'Error';
 
-  // Al abrir la app, carga el historial guardado
   useEffect(() => {
     AsyncStorage.getItem(HISTORY_KEY)
       .then((saved) => {
@@ -59,7 +67,6 @@ export default function useCalculator() {
       .catch(() => {});
   }, []);
 
-  // Actualiza el historial en pantalla y lo guarda en el celular
   const saveHistory = (list: string[]) => {
     setHistory(list);
     AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(list)).catch(() => {});
@@ -75,13 +82,12 @@ export default function useCalculator() {
 
   const pressNumber = (digit: string) => {
     if (justEvaluated) {
-      // Después de "=", escribir un número empieza una operación nueva
       setTokens([]);
       setJustEvaluated(false);
       setCurrent(digit);
       return;
     }
-    if (current === '' || current === '0') return setCurrent(digit);
+    if (current === '0') return setCurrent(digit);
     if (current === '-0') return setCurrent('-' + digit);
     if (current.replace(/[-.]/g, '').length >= MAX_DIGITS) return;
     setCurrent(current + digit);
@@ -94,13 +100,11 @@ export default function useCalculator() {
       setCurrent('0.');
       return;
     }
-    if (current === '') return setCurrent('0.');
-    if (current === '-') return setCurrent('-0.');
+    if (current === '' || current === '-') return setCurrent(current + '0.');
     if (!current.includes('.')) setCurrent(current + '.');
   };
 
   const pressOperator = (op: string) => {
-    // Después de "=", se sigue operando con el resultado
     if (justEvaluated) {
       setTokens([current, op]);
       setCurrent('');
@@ -108,33 +112,28 @@ export default function useCalculator() {
       return;
     }
 
-    // Se presionó un operador y luego otro: se cambia, o se inicia un negativo (5 × -3)
     if (current === '') {
-      const last = tokens[tokens.length - 1];
-      if (op === '-' && (last === '×' || last === '÷')) {
-        setCurrent('-');
-      } else {
-        setTokens([...tokens.slice(0, -1), op]);
+      if (tokens.length > 0) {
+        const last = tokens[tokens.length - 1];
+        if (op === '-' && (last === '×' || last === '÷' || last === '*')) {
+          setCurrent('-');
+        } else {
+          setTokens([...tokens.slice(0, -1), op]);
+        }
       }
       return;
     }
 
-    // Negativo al inicio: -5 + 2
-    if (op === '-' && current === '0' && tokens.length === 0) {
-      setCurrent('-');
-      return;
-    }
     if (current === '-') return;
 
-    setTokens([...tokens, format(parseFloat(current)), op]);
+    setTokens([...tokens, current, op]);
     setCurrent('');
   };
 
   const pressEquals = () => {
-    // No hace nada si no hay operación completa
     if (justEvaluated || tokens.length === 0 || current === '' || current === '-') return;
 
-    const full = [...tokens, format(parseFloat(current))];
+    const full = [...tokens, current];
     const result = format(evaluate(full));
 
     setTokens(full);
@@ -158,11 +157,12 @@ export default function useCalculator() {
   const backspace = () => {
     if (justEvaluated || current.includes('e')) return;
 
-    // Si se acaba de presionar un operador, DEL lo quita y devuelve el número anterior
     if (current === '') {
-      const rest = tokens.slice(0, -1);
-      setCurrent(rest[rest.length - 1]);
-      setTokens(rest.slice(0, -1));
+      if (tokens.length > 0) {
+        const prevNum = tokens[tokens.length - 2];
+        setTokens(tokens.slice(0, -2));
+        setCurrent(prevNum !== undefined ? prevNum : '0');
+      }
       return;
     }
 
@@ -174,10 +174,8 @@ export default function useCalculator() {
   };
 
   const handlePress = (label: string) => {
-    // Con "Error" solo se puede usar AC
     if (hasError && label !== 'AC') return;
-
-    if (label.length === 1 && label >= '0' && label <= '9') return pressNumber(label);
+    if (label >= '0' && label <= '9') return pressNumber(label);
 
     switch (label) {
       case '.': return pressDot();
@@ -185,11 +183,18 @@ export default function useCalculator() {
       case 'DEL': return backspace();
       case '%': return percent();
       case '=': return pressEquals();
-      default: return pressOperator(label); // + - × ÷
+      case '+':
+      case '-':
+      case '×':
+      case '÷':
+      case '*':
+      case '/': 
+        return pressOperator(label);
+      default: 
+        return;
     }
   };
 
-  // Lo que ve el usuario
   const display = current !== '' ? current : tokens[tokens.length - 2];
   const expression = tokens.join(' ') + (justEvaluated ? ' =' : '');
 

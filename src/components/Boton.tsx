@@ -22,8 +22,9 @@ export default function Boton({ label, type = 'number', doubleWidth = false, onP
       onPressIn={vibrar}
       style={({ pressed }) => [
         styles.button,
+        label === '.' ? {backgroundColor: '#085eff' } : null ,
         doubleWidth && styles.doubleButton,
-        pressed && styles.buttonPressed,
+        pressed && (label === '.' ? styles.dotPressed: styles.buttonPressed),
   ]}
 >
       {({ pressed }) => (
@@ -32,7 +33,6 @@ export default function Boton({ label, type = 'number', doubleWidth = false, onP
           <View style={[styles.dot, styles.topRight]} />
           <View style={[styles.dot, styles.bottomLeft]} />
           <View style={[styles.dot, styles.bottomRight]} />
-
           <CustomText style={styles.text}>{label}</CustomText>
         </View>
       )}
@@ -54,6 +54,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#B54C0B',
     borderBottomWidth: 3,
     marginTop: 5,
+  },
+  dotPressed: {
+    backgroundColor: '#085eff',
+    borderBottomWidth: 3,
+    marginTop: 5,    
   },
   doubleButton: {
     flex: 2,
